@@ -40,7 +40,7 @@ type Config struct {
 	ApiKey string
 }
 type Opsgenie struct {
-	Config *ogclient.Config
+	config *ogclient.Config
 	apiKey string
 }
 
@@ -58,7 +58,7 @@ func New(ctx context.Context, config Config) (*Opsgenie, error) {
 
 	rv := &Opsgenie{
 		apiKey: config.ApiKey,
-		Config: clientConfig,
+		config: clientConfig,
 	}
 	return rv, nil
 }
@@ -75,7 +75,7 @@ func (c *Opsgenie) Metadata(ctx context.Context) (*v2.ConnectorMetadata, error) 
 }
 
 func (c *Opsgenie) Validate(ctx context.Context) (annotations.Annotations, error) {
-	userClient, err := user.NewClient(c.Config)
+	userClient, err := user.NewClient(c.config)
 	if err != nil {
 		return nil, err
 	}
@@ -94,8 +94,8 @@ func (c *Opsgenie) Asset(ctx context.Context, asset *v2.AssetRef) (string, io.Re
 
 func (c *Opsgenie) ResourceSyncers(ctx context.Context) []connectorbuilder.ResourceSyncer {
 	return []connectorbuilder.ResourceSyncer{
-		teamBuilder(c.Config),
-		roleBuilder(c.Config),
-		userBuilder(c.Config),
+		teamBuilder(c.config),
+		roleBuilder(c.config),
+		userBuilder(c.config),
 	}
 }
