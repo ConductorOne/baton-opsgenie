@@ -2,39 +2,100 @@ package connector
 
 import (
 	"context"
-	"fmt"
+	"io"
 
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
+	"github.com/conductorone/baton-sdk/pkg/annotations"
+	"github.com/conductorone/baton-sdk/pkg/connectorbuilder"
+	"github.com/conductorone/baton-sdk/pkg/uhttp"
+	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
+	ogclient "github.com/opsgenie/opsgenie-go-sdk-v2/client"
+	user "github.com/opsgenie/opsgenie-go-sdk-v2/user"
 )
 
-// TODO: implement your connector here
-type connectorImpl struct {
+var (
+	resourceTypeRole = &v2.ResourceType{
+		Id:          "role",
+		DisplayName: "Role",
+		Traits:      []v2.ResourceType_Trait{v2.ResourceType_TRAIT_ROLE},
+		Annotations: v1AnnotationsForResourceType("role"),
+	}
+	resourceTypeTeam = &v2.ResourceType{
+		Id:          "team",
+		DisplayName: "Team",
+		Traits:      []v2.ResourceType_Trait{v2.ResourceType_TRAIT_GROUP},
+		Annotations: v1AnnotationsForResourceType("team"),
+	}
+	resourceTypeUser = &v2.ResourceType{
+		Id:          "user",
+		DisplayName: "User",
+		Traits: []v2.ResourceType_Trait{
+			v2.ResourceType_TRAIT_USER,
+		},
+		Annotations: v1AnnotationsForResourceType("user"),
+	}
+)
+
+type Config struct {
+	ApiKey string
+}
+type Opsgenie struct {
+	Config *ogclient.Config
+	apiKey string
 }
 
-func (c *connectorImpl) ListResourceTypes(ctx context.Context, req *v2.ResourceTypesServiceListResourceTypesRequest) (*v2.ResourceTypesServiceListResourceTypesResponse, error) {
-	return nil, fmt.Errorf("not implemented")
+func New(ctx context.Context, config Config) (*Opsgenie, error) {
+	l := ctxzap.Extract(ctx)
+	httpClient, err := uhttp.NewClient(ctx, uhttp.WithLogger(true, l))
+	if err != nil {
+		return nil, err
+	}
+
+	clientConfig := &ogclient.Config{
+		ApiKey:     config.ApiKey,
+		HttpClient: httpClient,
+	}
+
+	rv := &Opsgenie{
+		apiKey: config.ApiKey,
+		Config: clientConfig,
+	}
+	return rv, nil
 }
 
-func (c *connectorImpl) ListResources(ctx context.Context, req *v2.ResourcesServiceListResourcesRequest) (*v2.ResourcesServiceListResourcesResponse, error) {
-	return nil, fmt.Errorf("not implemented")
+func (c *Opsgenie) Metadata(ctx context.Context) (*v2.ConnectorMetadata, error) {
+	_, err := c.Validate(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &v2.ConnectorMetadata{
+		DisplayName: "Opsgenie",
+	}, nil
 }
 
-func (c *connectorImpl) ListEntitlements(ctx context.Context, req *v2.EntitlementsServiceListEntitlementsRequest) (*v2.EntitlementsServiceListEntitlementsResponse, error) {
-	return nil, fmt.Errorf("not implemented")
+func (c *Opsgenie) Validate(ctx context.Context) (annotations.Annotations, error) {
+	userClient, err := user.NewClient(c.Config)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = userClient.List(ctx, &user.ListRequest{Limit: 1, Offset: 0})
+	if err != nil {
+		return nil, err
+	}
+
+	return nil, nil
 }
 
-func (c *connectorImpl) ListGrants(ctx context.Context, req *v2.GrantsServiceListGrantsRequest) (*v2.GrantsServiceListGrantsResponse, error) {
-	return nil, fmt.Errorf("not implemented")
+func (c *Opsgenie) Asset(ctx context.Context, asset *v2.AssetRef) (string, io.ReadCloser, error) {
+	return "", nil, nil
 }
 
-func (c *connectorImpl) GetMetadata(ctx context.Context, req *v2.ConnectorServiceGetMetadataRequest) (*v2.ConnectorServiceGetMetadataResponse, error) {
-	return nil, fmt.Errorf("not implemented")
-}
-
-func (c *connectorImpl) Validate(ctx context.Context, req *v2.ConnectorServiceValidateRequest) (*v2.ConnectorServiceValidateResponse, error) {
-	return nil, fmt.Errorf("not implemented")
-}
-
-func (c *connectorImpl) GetAsset(req *v2.AssetServiceGetAssetRequest, server v2.AssetService_GetAssetServer) error {
-	return fmt.Errorf("not implemented")
+func (c *Opsgenie) ResourceSyncers(ctx context.Context) []connectorbuilder.ResourceSyncer {
+	return []connectorbuilder.ResourceSyncer{
+		teamBuilder(c.Config),
+		roleBuilder(c.Config),
+		userBuilder(c.Config),
+	}
 }
