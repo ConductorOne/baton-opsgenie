@@ -73,10 +73,10 @@ func (o *userResourceType) Grants(_ context.Context, _ *v2.Resource, _ *paginati
 	return nil, "", nil, nil
 }
 
-func userBuilder(Config *ogclient.Config) *userResourceType {
+func userBuilder(config *ogclient.Config) *userResourceType {
 	return &userResourceType{
 		resourceType: resourceTypeUser,
-		config:       Config,
+		config:       config,
 	}
 }
 
