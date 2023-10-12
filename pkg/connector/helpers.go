@@ -7,7 +7,7 @@ import (
 	"github.com/conductorone/baton-sdk/pkg/annotations"
 )
 
-const ResourcesPageSize = 50
+const ResourcesPageSize = 100
 
 func strToInt(s string) int {
 	i, err := strconv.Atoi(s)
