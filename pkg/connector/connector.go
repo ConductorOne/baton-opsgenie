@@ -18,13 +18,11 @@ var (
 		Id:          "role",
 		DisplayName: "Role",
 		Traits:      []v2.ResourceType_Trait{v2.ResourceType_TRAIT_ROLE},
-		Annotations: v1AnnotationsForResourceType("role"),
 	}
 	resourceTypeTeam = &v2.ResourceType{
 		Id:          "team",
 		DisplayName: "Team",
 		Traits:      []v2.ResourceType_Trait{v2.ResourceType_TRAIT_GROUP},
-		Annotations: v1AnnotationsForResourceType("team"),
 	}
 	resourceTypeUser = &v2.ResourceType{
 		Id:          "user",
@@ -32,19 +30,16 @@ var (
 		Traits: []v2.ResourceType_Trait{
 			v2.ResourceType_TRAIT_USER,
 		},
-		Annotations: v1AnnotationsForResourceType("user"),
+		Annotations: annotationsForUserResourceType(),
 	}
 )
 
-type Config struct {
-	ApiKey string
-}
 type Opsgenie struct {
 	config *ogclient.Config
 	apiKey string
 }
 
-func New(ctx context.Context, config Config) (*Opsgenie, error) {
+func New(ctx context.Context, apiKey string) (*Opsgenie, error) {
 	l := ctxzap.Extract(ctx)
 	httpClient, err := uhttp.NewClient(ctx, uhttp.WithLogger(true, l))
 	if err != nil {
@@ -52,25 +47,22 @@ func New(ctx context.Context, config Config) (*Opsgenie, error) {
 	}
 
 	clientConfig := &ogclient.Config{
-		ApiKey:     config.ApiKey,
+		ApiKey:     apiKey,
 		HttpClient: httpClient,
 	}
 
 	rv := &Opsgenie{
-		apiKey: config.ApiKey,
+		apiKey: apiKey,
 		config: clientConfig,
 	}
+
 	return rv, nil
 }
 
 func (c *Opsgenie) Metadata(ctx context.Context) (*v2.ConnectorMetadata, error) {
-	_, err := c.Validate(ctx)
-	if err != nil {
-		return nil, err
-	}
-
 	return &v2.ConnectorMetadata{
 		DisplayName: "Opsgenie",
+		Description: "Connector syncing Opsgenie users, teams and roles to Baton",
 	}, nil
 }
 

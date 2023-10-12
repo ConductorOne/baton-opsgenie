@@ -20,6 +20,34 @@ func (o *userResourceType) ResourceType(_ context.Context) *v2.ResourceType {
 	return o.resourceType
 }
 
+func userResource(ctx context.Context, user user.User) (*v2.Resource, error) {
+	profile := map[string]interface{}{
+		"full_name": user.FullName,
+		"time_zone": user.TimeZone,
+		"blocked":   user.Blocked,
+		"verified":  user.Verified,
+		"email":     user.Username,
+	}
+
+	userTraitOptions := []resource.UserTraitOption{
+		resource.WithUserProfile(profile),
+		resource.WithEmail(user.Username, true),
+		resource.WithStatus(v2.UserTrait_Status_STATUS_ENABLED),
+	}
+
+	resource, err := resource.NewUserResource(
+		user.FullName,
+		resourceTypeUser,
+		user.Id,
+		userTraitOptions,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return resource, nil
+}
+
 func (o *userResourceType) List(ctx context.Context, _ *v2.ResourceId, pt *pagination.Token) ([]*v2.Resource, string, annotations.Annotations, error) {
 	bag := &pagination.Bag{}
 	err := bag.Unmarshal(pt.Token)
@@ -38,23 +66,27 @@ func (o *userResourceType) List(ctx context.Context, _ *v2.ResourceId, pt *pagin
 		return nil, "", nil, err
 	}
 
-	users, err := userClient.List(ctx, &user.ListRequest{Limit: int(100), Offset: strToInt(bag.PageToken())})
+	users, err := userClient.List(
+		ctx,
+		&user.ListRequest{
+			Limit:  ResourcesPageSize,
+			Offset: strToInt(bag.PageToken()),
+		},
+	)
 	if err != nil {
 		return nil, "", nil, err
 	}
 
 	rv := make([]*v2.Resource, 0)
 	for _, user := range users.Users {
-		annos := &v2.V1Identifier{
-			Id: user.Id,
-		}
-		profile := userProfile(ctx, user)
-		userTrait := []resource.UserTraitOption{resource.WithUserProfile(profile), resource.WithEmail(user.Username, true), resource.WithStatus(v2.UserTrait_Status_STATUS_ENABLED)}
-		userResource, err := resource.NewUserResource(user.FullName, resourceTypeUser, user.Id, userTrait, resource.WithAnnotation(annos))
+		userCopy := user
+
+		ur, err := userResource(ctx, userCopy)
 		if err != nil {
 			return nil, "", nil, err
 		}
-		rv = append(rv, userResource)
+
+		rv = append(rv, ur)
 	}
 
 	nextPage, err := bag.NextToken(users.Paging.Next)
@@ -78,14 +110,4 @@ func userBuilder(config *ogclient.Config) *userResourceType {
 		resourceType: resourceTypeUser,
 		config:       config,
 	}
-}
-
-func userProfile(ctx context.Context, user user.User) map[string]interface{} {
-	profile := make(map[string]interface{})
-	profile["full_name"] = user.FullName
-	profile["time_zone"] = user.TimeZone
-	profile["blocked"] = user.Blocked
-	profile["verified"] = user.Verified
-	profile["email"] = user.Username
-	return profile
 }

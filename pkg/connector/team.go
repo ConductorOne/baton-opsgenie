@@ -28,6 +28,30 @@ func (o *teamResourceType) ResourceType(_ context.Context) *v2.ResourceType {
 	return o.resourceType
 }
 
+func teamResource(ctx context.Context, team oteam.ListedTeams) (*v2.Resource, error) {
+	profile := map[string]interface{}{
+		"team_id":          team.Id,
+		"team_name":        team.Name,
+		"team_description": team.Description,
+	}
+
+	groupTraitOptions := []res.GroupTraitOption{
+		res.WithGroupProfile(profile),
+	}
+
+	resource, err := res.NewGroupResource(
+		team.Name,
+		resourceTypeTeam,
+		team.Id,
+		groupTraitOptions,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return resource, nil
+}
+
 func (o *teamResourceType) List(ctx context.Context, resourceId *v2.ResourceId, pt *pagination.Token) ([]*v2.Resource, string, annotations.Annotations, error) {
 	teamClient, err := oteam.NewClient(o.config)
 	if err != nil {
@@ -41,30 +65,33 @@ func (o *teamResourceType) List(ctx context.Context, resourceId *v2.ResourceId, 
 
 	rv := make([]*v2.Resource, 0)
 	for _, t := range teams.Teams {
-		annos := &v2.V1Identifier{
-			Id: t.Id,
-		}
-		profile := teamProfile(ctx, t)
-		groupTrait := []res.GroupTraitOption{res.WithGroupProfile(profile)}
-		groupResource, err := res.NewGroupResource(t.Name, resourceTypeTeam, t.Id, groupTrait, res.WithAnnotation(annos))
+		tr, err := teamResource(ctx, t)
 		if err != nil {
 			return nil, "", nil, err
 		}
-		rv = append(rv, groupResource)
+
+		rv = append(rv, tr)
 	}
+
 	return rv, "", nil, nil
 }
 
 func (o *teamResourceType) Entitlements(ctx context.Context, resource *v2.Resource, _ *pagination.Token) ([]*v2.Entitlement, string, annotations.Annotations, error) {
-	var annos annotations.Annotations
-	annos.Update(&v2.V1Identifier{
-		Id: V1MembershipEntitlementID(resource.Id.Resource),
-	})
-	member := ent.NewAssignmentEntitlement(resource, teamMemberEntitlement, ent.WithGrantableTo(resourceTypeUser))
-	member.Description = fmt.Sprintf("Is member of the %s team in Opsgenie", resource.DisplayName)
-	member.Annotations = annos
-	member.DisplayName = fmt.Sprintf("%s Team Member", resource.DisplayName)
-	return []*v2.Entitlement{member}, "", nil, nil
+	var rv []*v2.Entitlement
+
+	assignmentOptions := []ent.EntitlementOption{
+		ent.WithGrantableTo(resourceTypeUser),
+		ent.WithDisplayName(fmt.Sprintf("%s Team Member", resource.DisplayName)),
+		ent.WithDescription(fmt.Sprintf("Is member of the %s team in Opsgenie", resource.DisplayName)),
+	}
+
+	rv = append(rv, ent.NewAssignmentEntitlement(
+		resource,
+		teamMemberEntitlement,
+		assignmentOptions...,
+	))
+
+	return rv, "", nil, nil
 }
 
 func (o *teamResourceType) Grants(ctx context.Context, resource *v2.Resource, pt *pagination.Token) ([]*v2.Grant, string, annotations.Annotations, error) {
@@ -84,16 +111,16 @@ func (o *teamResourceType) Grants(ctx context.Context, resource *v2.Resource, pt
 		if err != nil {
 			return nil, "", nil, err
 		}
+
 		for _, member := range teamWithMembers.Members {
-			v1Identifier := &v2.V1Identifier{
-				Id: V1GrantID(V1MembershipEntitlementID(resource.Id.Resource), member.User.ID),
-			}
-			gmID, err := res.NewResourceID(resourceTypeUser, member.User.ID)
-			if err != nil {
-				return nil, "", nil, err
-			}
-			grant := grant.NewGrant(resource, teamMemberEntitlement, gmID, grant.WithAnnotation(v1Identifier))
-			rv = append(rv, grant)
+			rv = append(rv, grant.NewGrant(
+				resource,
+				teamMemberEntitlement,
+				&v2.ResourceId{
+					ResourceType: resourceTypeUser.Id,
+					Resource:     member.User.ID,
+				},
+			))
 		}
 	}
 
@@ -105,12 +132,4 @@ func teamBuilder(config *ogclient.Config) *teamResourceType {
 		resourceType: resourceTypeTeam,
 		config:       config,
 	}
-}
-
-func teamProfile(ctx context.Context, team oteam.ListedTeams) map[string]interface{} {
-	profile := make(map[string]interface{})
-	profile["team_id"] = team.Id
-	profile["team_name"] = team.Name
-	profile["team_description"] = team.Description
-	return profile
 }
