@@ -32,6 +32,13 @@ var (
 		},
 		Annotations: annotationsForUserResourceType(),
 	}
+	resourceTypeSchedule = &v2.ResourceType{
+		Id:          "schedule",
+		DisplayName: "Schedule",
+		Traits: []v2.ResourceType_Trait{
+			v2.ResourceType_TRAIT_GROUP,
+		},
+	}
 )
 
 type Opsgenie struct {
@@ -89,5 +96,6 @@ func (c *Opsgenie) ResourceSyncers(ctx context.Context) []connectorbuilder.Resou
 		teamBuilder(c.config),
 		roleBuilder(c.config),
 		userBuilder(c.config),
+		scheduleBuilder(c.config),
 	}
 }
