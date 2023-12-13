@@ -261,6 +261,7 @@ github.com/opsgenie/opsgenie-go-sdk-v2/alert
 github.com/opsgenie/opsgenie-go-sdk-v2/client
 github.com/opsgenie/opsgenie-go-sdk-v2/custom_user_role
 github.com/opsgenie/opsgenie-go-sdk-v2/og
+github.com/opsgenie/opsgenie-go-sdk-v2/schedule
 github.com/opsgenie/opsgenie-go-sdk-v2/team
 github.com/opsgenie/opsgenie-go-sdk-v2/user
 # github.com/pelletier/go-toml/v2 v2.1.0
