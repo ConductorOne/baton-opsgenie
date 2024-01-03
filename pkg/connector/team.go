@@ -101,27 +101,26 @@ func (o *teamResourceType) Grants(ctx context.Context, resource *v2.Resource, pt
 		return nil, "", nil, err
 	}
 
-	teams, err := teamClient.List(ctx, &oteam.ListTeamRequest{BaseRequest: ogclient.BaseRequest{}})
+	getTeamRequest := &oteam.GetTeamRequest{
+		BaseRequest:     ogclient.BaseRequest{},
+		IdentifierValue: resource.Id.Resource,
+		IdentifierType:  oteam.Identifier(idIdentifierType),
+	}
+
+	t, err := teamClient.Get(ctx, getTeamRequest)
 	if err != nil {
 		return nil, "", nil, err
 	}
 
-	for _, team := range teams.Teams {
-		teamWithMembers, err := teamClient.Get(ctx, &oteam.GetTeamRequest{BaseRequest: ogclient.BaseRequest{}, IdentifierValue: team.Id, IdentifierType: oteam.Identifier(idIdentifierType)})
-		if err != nil {
-			return nil, "", nil, err
-		}
-
-		for _, member := range teamWithMembers.Members {
-			rv = append(rv, grant.NewGrant(
-				resource,
-				teamMemberEntitlement,
-				&v2.ResourceId{
-					ResourceType: resourceTypeUser.Id,
-					Resource:     member.User.ID,
-				},
-			))
-		}
+	for _, member := range t.Members {
+		rv = append(rv, grant.NewGrant(
+			resource,
+			teamMemberEntitlement,
+			&v2.ResourceId{
+				ResourceType: resourceTypeUser.Id,
+				Resource:     member.User.ID,
+			},
+		))
 	}
 
 	return rv, "", nil, nil
