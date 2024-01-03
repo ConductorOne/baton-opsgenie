@@ -3,6 +3,9 @@ package connector
 import (
 	"context"
 	"io"
+	"math"
+	"net/http"
+	"time"
 
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
 	"github.com/conductorone/baton-sdk/pkg/annotations"
@@ -56,6 +59,14 @@ func New(ctx context.Context, apiKey string) (*Opsgenie, error) {
 	clientConfig := &ogclient.Config{
 		ApiKey:     apiKey,
 		HttpClient: httpClient,
+		RetryCount: 10,
+		Backoff: func(min, max time.Duration, attemptNum int, resp *http.Response) time.Duration {
+			// exponential backoff - more information about rate limits in OpsGenie here: https://docs.opsgenie.com/docs/api-rate-limiting
+			exp := math.Pow(2, float64(attemptNum))
+			t := time.Duration(200) * time.Millisecond
+
+			return t * time.Duration(exp)
+		},
 	}
 
 	rv := &Opsgenie{
