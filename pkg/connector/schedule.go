@@ -3,7 +3,6 @@ package connector
 import (
 	"context"
 	"fmt"
-	"time"
 
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
 	"github.com/conductorone/baton-sdk/pkg/annotations"
@@ -21,8 +20,8 @@ const (
 	scheduleMember = "member"
 	scheduleOnCall = "on-call"
 
-	rotationUserParticipantType = "user"
-	rotationTeamParticipantType = "team"
+	userParticipantType = "user"
+	teamParticipantType = "team"
 )
 
 type scheduleResourceType struct {
@@ -40,9 +39,9 @@ func parseRotations(rotation []og.Rotation) ([]string, []string) {
 
 	for _, r := range rotation {
 		for _, p := range r.Participants {
-			if p.Type == rotationTeamParticipantType {
+			if p.Type == teamParticipantType {
 				teams = append(teams, p.Id)
-			} else if p.Type == rotationUserParticipantType {
+			} else if p.Type == userParticipantType {
 				users = append(users, p.Id)
 			}
 		}
@@ -139,7 +138,7 @@ func (s *scheduleResourceType) Entitlements(_ context.Context, resource *v2.Reso
 func (s *scheduleResourceType) Grants(ctx context.Context, resource *v2.Resource, pToken *pagination.Token) ([]*v2.Grant, string, annotations.Annotations, error) {
 	l := ctxzap.Extract(ctx)
 
-	// parse resource profile to get schedule members (users or teams) and grant them the member entitlement
+	// parse resource profile to get schedule members (users or teams)
 	groupTrait, err := rs.GetGroupTrait(resource)
 	if err != nil {
 		return nil, "", nil, err
@@ -156,6 +155,8 @@ func (s *scheduleResourceType) Grants(ctx context.Context, resource *v2.Resource
 	}
 
 	var rv []*v2.Grant
+
+	// grant users and teams under schedule the member entitlement
 	for _, u := range users {
 		rv = append(rv, grant.NewGrant(
 			resource,
@@ -183,31 +184,54 @@ func (s *scheduleResourceType) Grants(ctx context.Context, resource *v2.Resource
 		))
 	}
 
-	now := time.Now()
-	// hourFromNow := now.Add(time.Hour)
-
+	// grant users and teams under schedule the on-call entitlement
 	client, err := ogSchedule.NewClient(s.config)
 	if err != nil {
 		return nil, "", nil, err
 	}
 
-	flat := true
+	flat := false
 	req := &ogSchedule.GetOnCallsRequest{
 		BaseRequest:        ogClient.BaseRequest{},
 		Flat:               &flat,
-		Date:               &now,
 		ScheduleIdentifier: resource.DisplayName,
 	}
 
-	// TODO: finish this
 	oncalls, err := client.GetOnCalls(ctx, req)
 	if err != nil {
 		return nil, "", nil, fmt.Errorf("opsgenie-connector: failed to list on-calls: %w", err)
 	}
 
-	fmt.Printf("LISTING ON CALLS:\n%+v\n", oncalls)
-	for _, participant := range oncalls.OnCallRecipients {
-		fmt.Printf("oncall: %+v\n", participant)
+	for _, p := range oncalls.OnCallParticipants {
+		var resourceType string
+		var grantOptions []grant.GrantOption
+
+		switch p.Type {
+		case userParticipantType:
+			resourceType = resourceTypeUser.Id
+		case teamParticipantType:
+			resourceType = resourceTypeTeam.Id
+			grantOptions = append(
+				grantOptions,
+				grant.WithAnnotation(
+					&v2.GrantExpandable{
+						EntitlementIds: []string{fmt.Sprintf("team:%s:%s", p.Id, teamMemberEntitlement)},
+					},
+				),
+			)
+		default:
+			return nil, "", nil, fmt.Errorf("opsgenie-connector: unknown participant type: %s", p.Type)
+		}
+
+		rv = append(rv, grant.NewGrant(
+			resource,
+			scheduleOnCall,
+			&v2.ResourceId{
+				ResourceType: resourceType,
+				Resource:     p.Id,
+			},
+			grantOptions...,
+		))
 	}
 
 	return rv, "", nil, nil
