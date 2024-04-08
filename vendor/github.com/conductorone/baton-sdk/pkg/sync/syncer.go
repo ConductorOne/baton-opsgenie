@@ -41,6 +41,7 @@ type syncer struct {
 	runDuration       time.Duration
 	transitionHandler func(s Action)
 	progressHandler   func(p *Progress)
+	tmpDir            string
 
 	skipEGForResourceType map[string]bool
 }
@@ -371,6 +372,9 @@ func (s *syncer) syncResources(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
+
+		// Set the resource creation source
+		r.CreationSource = v2.Resource_CREATION_SOURCE_CONNECTOR_LIST_RESOURCES
 
 		err = s.store.PutResource(ctx, r)
 		if err != nil {
@@ -1312,7 +1316,7 @@ func (s *syncer) loadStore(ctx context.Context) error {
 	}
 
 	if s.c1zManager == nil {
-		m, err := manager.New(ctx, s.c1zPath)
+		m, err := manager.New(ctx, s.c1zPath, manager.WithTmpDir(s.tmpDir))
 		if err != nil {
 			return err
 		}
@@ -1390,6 +1394,12 @@ func WithConnectorStore(store connectorstore.Writer) SyncOpt {
 func WithC1ZPath(path string) SyncOpt {
 	return func(s *syncer) {
 		s.c1zPath = path
+	}
+}
+
+func WithTmpDir(path string) SyncOpt {
+	return func(s *syncer) {
+		s.tmpDir = path
 	}
 }
 

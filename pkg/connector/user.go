@@ -49,16 +49,9 @@ func userResource(ctx context.Context, user user.User) (*v2.Resource, error) {
 }
 
 func (o *userResourceType) List(ctx context.Context, _ *v2.ResourceId, pt *pagination.Token) ([]*v2.Resource, string, annotations.Annotations, error) {
-	bag := &pagination.Bag{}
-	err := bag.Unmarshal(pt.Token)
+	bag, offset, err := parsePageToken(pt.Token, &v2.ResourceId{ResourceType: o.resourceType.Id})
 	if err != nil {
 		return nil, "", nil, err
-	}
-
-	if bag.Current() == nil {
-		bag.Push(pagination.PageState{
-			ResourceTypeID: resourceTypeUser.Id,
-		})
 	}
 
 	userClient, err := user.NewClient(o.config)
@@ -70,7 +63,7 @@ func (o *userResourceType) List(ctx context.Context, _ *v2.ResourceId, pt *pagin
 		ctx,
 		&user.ListRequest{
 			Limit:  ResourcesPageSize,
-			Offset: strToInt(bag.PageToken()),
+			Offset: offset,
 		},
 	)
 	if err != nil {
@@ -89,7 +82,7 @@ func (o *userResourceType) List(ctx context.Context, _ *v2.ResourceId, pt *pagin
 		rv = append(rv, ur)
 	}
 
-	nextPage, err := bag.NextToken(users.Paging.Next)
+	nextPage, err := handleNextPage(bag, users.Paging.Next)
 	if err != nil {
 		return nil, "", nil, err
 	}

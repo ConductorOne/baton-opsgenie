@@ -1,22 +1,12 @@
 package connector
 
 import (
-	"strconv"
-
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
 	"github.com/conductorone/baton-sdk/pkg/annotations"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
 const ResourcesPageSize = 100
-
-func strToInt(s string) int {
-	i, err := strconv.Atoi(s)
-	if err != nil {
-		return 0
-	}
-	return i
-}
 
 func annotationsForUserResourceType() annotations.Annotations {
 	annos := annotations.Annotations{}

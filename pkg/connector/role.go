@@ -111,17 +111,9 @@ func (o *roleResourceType) Entitlements(ctx context.Context, resource *v2.Resour
 }
 
 func (o *roleResourceType) Grants(ctx context.Context, resource *v2.Resource, pt *pagination.Token) ([]*v2.Grant, string, annotations.Annotations, error) {
-	bag := &pagination.Bag{}
-	err := bag.Unmarshal(pt.Token)
+	bag, offset, err := parsePageToken(pt.Token, resource.Id)
 	if err != nil {
 		return nil, "", nil, err
-	}
-
-	if bag.Current() == nil {
-		bag.Push(pagination.PageState{
-			ResourceTypeID: resource.Id.ResourceType,
-			ResourceID:     resource.Id.Resource,
-		})
 	}
 
 	userClient, err := user.NewClient(o.config)
@@ -133,7 +125,7 @@ func (o *roleResourceType) Grants(ctx context.Context, resource *v2.Resource, pt
 		ctx,
 		&user.ListRequest{
 			Limit:  ResourcesPageSize,
-			Offset: strToInt(bag.PageToken()),
+			Offset: offset,
 		},
 	)
 	if err != nil {
@@ -154,7 +146,7 @@ func (o *roleResourceType) Grants(ctx context.Context, resource *v2.Resource, pt
 		}
 	}
 
-	nextPage, err := bag.NextToken(users.Paging.Next)
+	nextPage, err := handleNextPage(bag, users.Paging.Next)
 	if err != nil {
 		return nil, "", nil, err
 	}
