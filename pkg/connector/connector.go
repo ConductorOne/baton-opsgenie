@@ -27,6 +27,11 @@ var (
 		DisplayName: "Team",
 		Traits:      []v2.ResourceType_Trait{v2.ResourceType_TRAIT_GROUP},
 	}
+	resourceTypeEscalation = &v2.ResourceType{
+		Id:          "escalation",
+		DisplayName: "Escalation",
+		Traits:      []v2.ResourceType_Trait{v2.ResourceType_TRAIT_GROUP},
+	}
 	resourceTypeUser = &v2.ResourceType{
 		Id:          "user",
 		DisplayName: "User",
