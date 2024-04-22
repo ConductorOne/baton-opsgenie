@@ -20,8 +20,9 @@ const (
 	scheduleMember = "member"
 	scheduleOnCall = "on-call"
 
-	userParticipantType = "user"
-	teamParticipantType = "team"
+	userParticipantType       = "user"
+	teamParticipantType       = "team"
+	escalationParticipantType = "escalation"
 )
 
 type scheduleResourceType struct {
@@ -154,6 +155,11 @@ func (s *scheduleResourceType) Grants(ctx context.Context, resource *v2.Resource
 		l.Info("opsgenie-connector: no teams found for schedule resource")
 	}
 
+	escalations, ok := getProfileStringArray(groupTrait.Profile, "schedule_escalations")
+	if !ok {
+		l.Info("opsgenie-connector: no escalations found for schedule resource")
+	}
+
 	var rv []*v2.Grant
 
 	// grant users and teams under schedule the member entitlement
@@ -181,6 +187,17 @@ func (s *scheduleResourceType) Grants(ctx context.Context, resource *v2.Resource
 					EntitlementIds: []string{fmt.Sprintf("team:%s:%s", t, scheduleMember)},
 				},
 			),
+		))
+	}
+
+	for _, t := range escalations {
+		rv = append(rv, grant.NewGrant(
+			resource,
+			scheduleMember,
+			&v2.ResourceId{
+				ResourceType: resourceTypeEscalation.Id,
+				Resource:     t,
+			},
 		))
 	}
 
@@ -219,6 +236,8 @@ func (s *scheduleResourceType) Grants(ctx context.Context, resource *v2.Resource
 					},
 				),
 			)
+		case escalationParticipantType:
+			resourceType = resourceTypeEscalation.Id
 		default:
 			return nil, "", nil, fmt.Errorf("opsgenie-connector: unknown participant type: %s", p.Type)
 		}
