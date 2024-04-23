@@ -35,6 +35,11 @@ var (
 		},
 		Annotations: annotationsForUserResourceType(),
 	}
+	resourceTypeEscalation = &v2.ResourceType{
+		Id:          "escalation",
+		DisplayName: "Escalation",
+		Traits:      []v2.ResourceType_Trait{v2.ResourceType_TRAIT_GROUP},
+	}
 	resourceTypeSchedule = &v2.ResourceType{
 		Id:          "schedule",
 		DisplayName: "Schedule",
@@ -106,6 +111,7 @@ func (c *Opsgenie) ResourceSyncers(ctx context.Context) []connectorbuilder.Resou
 	return []connectorbuilder.ResourceSyncer{
 		teamBuilder(c.config),
 		roleBuilder(c.config),
+		escalationBuilder(c.config),
 		userBuilder(c.config),
 		scheduleBuilder(c.config),
 	}
