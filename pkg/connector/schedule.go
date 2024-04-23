@@ -221,7 +221,7 @@ func (s *scheduleResourceType) Grants(ctx context.Context, resource *v2.Resource
 				),
 			)
 		case escalationParticipantType:
-			resourceType = resourceTypeEscalation.Id
+			continue
 		default:
 			return nil, "", nil, fmt.Errorf("opsgenie-connector: unknown participant type: %s", p.Type)
 		}
