@@ -20,8 +20,9 @@ const (
 	scheduleMember = "member"
 	scheduleOnCall = "on-call"
 
-	userParticipantType = "user"
-	teamParticipantType = "team"
+	userParticipantType       = "user"
+	teamParticipantType       = "team"
+	escalationParticipantType = "escalation"
 )
 
 type scheduleResourceType struct {
@@ -219,6 +220,8 @@ func (s *scheduleResourceType) Grants(ctx context.Context, resource *v2.Resource
 					},
 				),
 			)
+		case escalationParticipantType:
+			continue
 		default:
 			return nil, "", nil, fmt.Errorf("opsgenie-connector: unknown participant type: %s", p.Type)
 		}
