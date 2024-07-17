@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	zaphook "github.com/Sytten/logrus-zap-hook"
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
 	"github.com/conductorone/baton-sdk/pkg/annotations"
 	"github.com/conductorone/baton-sdk/pkg/connectorbuilder"
@@ -14,6 +15,7 @@ import (
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	ogclient "github.com/opsgenie/opsgenie-go-sdk-v2/client"
 	user "github.com/opsgenie/opsgenie-go-sdk-v2/user"
+	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -56,9 +58,22 @@ func New(ctx context.Context, apiKey string) (*Opsgenie, error) {
 		return nil, err
 	}
 
+	// OpsGenie client takes a logrus logger, but we use zap.
+	logger := logrus.New()
+	logger.ReportCaller = true   // So Zap reports the right caller
+	logger.SetOutput(io.Discard) // Prevent logrus from writing its logs
+
+	hook, err := zaphook.NewZapHook(l)
+	if err != nil {
+		return nil, err
+	}
+
+	logger.Hooks.Add(hook)
+
 	clientConfig := &ogclient.Config{
 		ApiKey:     apiKey,
 		HttpClient: httpClient,
+		Logger:     logger,
 		RetryCount: 10,
 		Backoff: func(min, max time.Duration, attemptNum int, resp *http.Response) time.Duration {
 			// exponential backoff - more information about rate limits in OpsGenie here: https://docs.opsgenie.com/docs/api-rate-limiting
