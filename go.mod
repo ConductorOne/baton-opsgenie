@@ -5,6 +5,7 @@ go 1.20
 require (
 	github.com/conductorone/baton-sdk v0.1.32
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
+	github.com/sirupsen/logrus v1.9.3
 	go.uber.org/zap v1.26.0
 )
 
@@ -25,7 +26,6 @@ require (
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
 	github.com/shirou/gopsutil/v3 v3.23.10 // indirect
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
-	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
 	github.com/tklauser/numcpus v0.6.1 // indirect
@@ -40,6 +40,7 @@ require (
 )
 
 require (
+	github.com/Sytten/logrus-zap-hook v0.1.0
 	github.com/aws/aws-sdk-go-v2 v1.23.0 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.5.1 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.25.3 // indirect
@@ -72,7 +73,7 @@ require (
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
-	github.com/opsgenie/opsgenie-go-sdk-v2 v1.2.20
+	github.com/opsgenie/opsgenie-go-sdk-v2 v1.2.23
 	github.com/pelletier/go-toml/v2 v2.1.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/segmentio/ksuid v1.0.4 // indirect
