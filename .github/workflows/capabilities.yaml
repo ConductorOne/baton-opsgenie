@@ -16,7 +16,7 @@ jobs:
           token: ${{ secrets.RELENG_GITHUB_TOKEN }}
 
       - name: Setup Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version-file: 'go.mod'
 
@@ -24,6 +24,8 @@ jobs:
         run: go build -o connector ./cmd/baton-opsgenie
 
       - name: Run and save output
+        env:
+          BATON_API_KEY: ${{ secrets.BATON_API_KEY }}
         run: ./connector capabilities > baton_capabilities.json
 
       - name: Commit changes
