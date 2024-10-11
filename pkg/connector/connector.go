@@ -16,6 +16,7 @@ import (
 	ogclient "github.com/opsgenie/opsgenie-go-sdk-v2/client"
 	user "github.com/opsgenie/opsgenie-go-sdk-v2/user"
 	"github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 )
 
 var (
@@ -74,12 +75,13 @@ func New(ctx context.Context, apiKey string) (*Opsgenie, error) {
 		ApiKey:     apiKey,
 		HttpClient: httpClient,
 		Logger:     logger,
-		RetryCount: 10,
-		Backoff: func(min, max time.Duration, attemptNum int, resp *http.Response) time.Duration {
+		RetryCount: 20,
+		Backoff: func(_, _ time.Duration, attemptNum int, resp *http.Response) time.Duration {
 			// exponential backoff - more information about rate limits in OpsGenie here: https://docs.opsgenie.com/docs/api-rate-limiting
 			exp := math.Pow(2, float64(attemptNum))
 			t := time.Duration(200) * time.Millisecond
 
+			l.Debug("retrying in ", zap.Duration("retry_in", t*time.Duration(exp)))
 			return t * time.Duration(exp)
 		},
 	}
