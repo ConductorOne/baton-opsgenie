@@ -1,5 +1,5 @@
 {
-  "source": ["./dist/macos-arm64_darwin_arm64/baton-opsgenie"],
+  "source": ["./dist/macos-arm64_darwin_arm64-v8.0/baton-opsgenie"],
   "bundle_id": "com.conductorone.baton-opsgenie",
   "apple_id": {
     "username" : "justin.gallardo@conductorone.com"

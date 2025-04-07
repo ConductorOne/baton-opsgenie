@@ -36,7 +36,7 @@ builds:
     hooks:
       post:
         - gon .gon-arm64.json
-        - mv dist/baton-opsgenie-darwin-arm64.signed.zip dist/macos-arm64_darwin_arm64/baton-opsgenie
+        - mv dist/baton-opsgenie-darwin-arm64.signed.zip dist/macos-arm64_darwin_arm64-v8.0/baton-opsgenie
 archives:
   - id: linux-archive
     builds:
