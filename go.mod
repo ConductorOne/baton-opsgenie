@@ -1,12 +1,14 @@
 module github.com/conductorone/baton-opsgenie
 
-go 1.21
+go 1.23
 
-toolchain go1.23.2
+toolchain go1.23.6
 
 require (
 	github.com/conductorone/baton-sdk v0.2.41
+	github.com/ennyjfrick/ruleguard-logfatal v0.0.2
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
+	github.com/quasilyte/go-ruleguard/dsl v0.3.22
 	github.com/sirupsen/logrus v1.9.3
 	go.uber.org/zap v1.27.0
 )
@@ -40,7 +42,7 @@ require (
 	golang.org/x/crypto v0.24.0 // indirect
 	golang.org/x/exp v0.0.0-20240506185415-9bf2ced13842 // indirect
 	golang.org/x/oauth2 v0.20.0 // indirect
-	golang.org/x/sync v0.7.0 // indirect
+	golang.org/x/sync v0.11.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240506185236-b8a5c65736ae // indirect
 	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
 )
@@ -85,7 +87,7 @@ require (
 	github.com/segmentio/ksuid v1.0.4 // indirect
 	github.com/spf13/afero v1.11.0 // indirect
 	github.com/spf13/cast v1.6.0 // indirect
-	github.com/spf13/cobra v1.8.0
+	github.com/spf13/cobra v1.8.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.18.2
 	github.com/subosito/gotenv v1.6.0 // indirect
