@@ -2,6 +2,7 @@ package connector
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -205,7 +206,8 @@ func (s *scheduleResourceType) Grants(ctx context.Context, resource *v2.Resource
 	if err != nil {
 		// Check if the error is a 404 from OpsGenie API (schedule doesn't exist)
 		// Wrap with codes.NotFound so baton-sdk can handle this as a warning
-		if apiErr, ok := err.(*ogClient.ApiError); ok && apiErr.StatusCode == http.StatusNotFound {
+		var apiErr *ogClient.ApiError
+		if errors.As(err, &apiErr) && apiErr.StatusCode == http.StatusNotFound {
 			return nil, "", nil, status.Error(codes.NotFound, fmt.Sprintf("opsgenie-connector: schedule not found: %s", err.Error()))
 		}
 		return nil, "", nil, fmt.Errorf("opsgenie-connector: failed to list on-calls: %w", err)
