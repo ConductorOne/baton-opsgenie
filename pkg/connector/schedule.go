@@ -2,7 +2,9 @@ package connector
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net/http"
 
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
 	"github.com/conductorone/baton-sdk/pkg/annotations"
@@ -14,6 +16,8 @@ import (
 	ogClient "github.com/opsgenie/opsgenie-go-sdk-v2/client"
 	"github.com/opsgenie/opsgenie-go-sdk-v2/og"
 	ogSchedule "github.com/opsgenie/opsgenie-go-sdk-v2/schedule"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 const (
@@ -200,6 +204,12 @@ func (s *scheduleResourceType) Grants(ctx context.Context, resource *v2.Resource
 
 	oncalls, err := client.GetOnCalls(ctx, req)
 	if err != nil {
+		// Check if the error is a 404 from OpsGenie API (schedule doesn't exist)
+		// Wrap with codes.NotFound so baton-sdk can handle this as a warning
+		var apiErr *ogClient.ApiError
+		if errors.As(err, &apiErr) && apiErr.StatusCode == http.StatusNotFound {
+			return nil, "", nil, status.Error(codes.NotFound, fmt.Sprintf("opsgenie-connector: schedule not found: %s", err.Error()))
+		}
 		return nil, "", nil, fmt.Errorf("opsgenie-connector: failed to list on-calls: %w", err)
 	}
 
