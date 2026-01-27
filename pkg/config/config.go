@@ -8,6 +8,7 @@ var (
 	ApiKeyField = field.StringField(
 		"api-key",
 		field.WithDescription("Opsgenie API Key"),
+		field.WithIsSecret(true),
 		field.WithRequired(true),
 	)
 
@@ -19,3 +20,6 @@ var (
 		Fields: ConfigurationFields,
 	}
 )
+
+//go:generate go run ./gen
+var Config = field.NewConfiguration(ConfigurationFields)

@@ -44,10 +44,13 @@ func parseRotations(rotation []og.Rotation) ([]string, []string) {
 
 	for _, r := range rotation {
 		for _, p := range r.Participants {
-			if p.Type == teamParticipantType {
+			switch p.Type {
+			case teamParticipantType:
 				teams = append(teams, p.Id)
-			} else if p.Type == userParticipantType {
+			case userParticipantType:
 				users = append(users, p.Id)
+			default:
+				// Other participant types (escalation, schedule, none) are not relevant here
 			}
 		}
 	}
