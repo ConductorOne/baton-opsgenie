@@ -8,6 +8,7 @@ var (
 	ApiKeyField = field.StringField(
 		"api-key",
 		field.WithDescription("Opsgenie API Key"),
+		field.WithIsSecret(true),
 		field.WithRequired(true),
 	)
 
