@@ -12,8 +12,14 @@ var (
 		field.WithRequired(true),
 	)
 
+	BaseURLField = field.StringField(
+		"base-url",
+		field.WithDescription("Override the Opsgenie API URL (for testing)"),
+	)
+
 	ConfigurationFields = []field.SchemaField{
 		ApiKeyField,
+		BaseURLField,
 	}
 
 	ConfigurationSchema = field.Configuration{
