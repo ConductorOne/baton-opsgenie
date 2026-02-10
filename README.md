@@ -1,6 +1,6 @@
 ![Baton Logo](./docs/images/baton-logo.png)
 
-# `baton-opsgenie` [![Go Reference](https://pkg.go.dev/badge/github.com/conductorone/baton-opsgenie.svg)](https://pkg.go.dev/github.com/conductorone/baton-opsgenie) ![main ci](https://github.com/conductorone/baton-opsgenie/actions/workflows/main.yaml/badge.svg)
+# `baton-opsgenie` [![Go Reference](https://pkg.go.dev/badge/github.com/conductorone/baton-opsgenie.svg)](https://pkg.go.dev/github.com/conductorone/baton-opsgenie) ![ci](https://github.com/conductorone/baton-opsgenie/actions/workflows/ci.yaml/badge.svg) ![verify](https://github.com/conductorone/baton-opsgenie/actions/workflows/verify.yaml/badge.svg)
 
 `baton-opsgenie` is a connector for Opsgenie built using the [Baton SDK](https://github.com/conductorone/baton-sdk). It communicates with the Opsgenie API to sync data about teams, roles, and users.
 
