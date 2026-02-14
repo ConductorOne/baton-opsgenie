@@ -5,6 +5,7 @@ import "reflect"
 
 type Opsgenie struct {
 	ApiKey string `mapstructure:"api-key"`
+	BaseUrl string `mapstructure:"base-url"`
 }
 
 func (c *Opsgenie) findFieldByTag(tagValue string) (any, bool) {
