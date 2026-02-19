@@ -16,6 +16,7 @@ var (
 		"base-url",
 		field.WithDescription("Override the Opsgenie API URL (for testing)"),
 		field.WithHidden(true),
+		field.WithExportTarget(field.ExportTargetCLIOnly),
 	)
 
 	ConfigurationFields = []field.SchemaField{
