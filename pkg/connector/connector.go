@@ -52,7 +52,7 @@ type Opsgenie struct {
 	apiKey string
 }
 
-func New(ctx context.Context, apiKey string) (*Opsgenie, error) {
+func New(ctx context.Context, apiKey string, baseURL string) (*Opsgenie, error) {
 	l := ctxzap.Extract(ctx)
 	httpClient, err := uhttp.NewClient(ctx, uhttp.WithLogger(true, l))
 	if err != nil {
@@ -84,6 +84,10 @@ func New(ctx context.Context, apiKey string) (*Opsgenie, error) {
 			l.Debug("retrying in ", zap.Duration("retry_in", t*time.Duration(exp)))
 			return t * time.Duration(exp)
 		},
+	}
+
+	if baseURL != "" {
+		clientConfig.OpsGenieAPIURL = ogclient.ApiUrl(baseURL)
 	}
 
 	rv := &Opsgenie{

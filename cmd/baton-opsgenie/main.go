@@ -43,7 +43,7 @@ func main() {
 func getConnector(ctx context.Context, c *cfg.Opsgenie) (types.ConnectorServer, error) {
 	l := ctxzap.Extract(ctx)
 
-	cb, err := connector.New(ctx, c.ApiKey)
+	cb, err := connector.New(ctx, c.ApiKey, c.BaseUrl)
 	if err != nil {
 		l.Error("error creating connector", zap.Error(err))
 		return nil, err
