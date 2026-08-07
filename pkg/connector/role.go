@@ -41,15 +41,14 @@ func roleResource(ctx context.Context, roleName, roleId string) (*v2.Resource, e
 		"role_name": roleName,
 	}
 
-	roleTraitOptions := []res.RoleTraitOption{
-		res.WithRoleProfile(profile),
-	}
+	roleTraitOptions := []res.RoleTraitOption{}
 
 	resource, err := res.NewRoleResource(
 		roleName,
 		resourceTypeRole,
 		roleId,
 		roleTraitOptions,
+		res.WithResourceProfile(profile),
 	)
 	if err != nil {
 		return nil, err

@@ -79,7 +79,8 @@ func scheduleResource(schedule *ogSchedule.Schedule) (*v2.Resource, error) {
 		schedule.Name,
 		resourceTypeSchedule,
 		schedule.Id,
-		[]rs.GroupTraitOption{rs.WithGroupProfile(profile)},
+		[]rs.GroupTraitOption{},
+		rs.WithResourceProfile(profile),
 	)
 	if err != nil {
 		return nil, err
@@ -147,17 +148,13 @@ func (s *scheduleResourceType) Grants(ctx context.Context, resource *v2.Resource
 	l := ctxzap.Extract(ctx)
 
 	// parse resource profile to get schedule members (users or teams)
-	groupTrait, err := rs.GetGroupTrait(resource)
-	if err != nil {
-		return nil, "", nil, err
-	}
 
-	users, ok := getProfileStringArray(groupTrait.Profile, "schedule_users")
+	users, ok := getProfileStringArray(rs.GetProfile(resource), "schedule_users")
 	if !ok {
 		l.Info("opsgenie-connector: no users found for schedule resource")
 	}
 
-	teams, ok := getProfileStringArray(groupTrait.Profile, "schedule_teams")
+	teams, ok := getProfileStringArray(rs.GetProfile(resource), "schedule_teams")
 	if !ok {
 		l.Info("opsgenie-connector: no teams found for schedule resource")
 	}
