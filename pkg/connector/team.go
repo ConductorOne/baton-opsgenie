@@ -35,15 +35,14 @@ func teamResource(ctx context.Context, team oteam.ListedTeams) (*v2.Resource, er
 		"team_description": team.Description,
 	}
 
-	groupTraitOptions := []res.GroupTraitOption{
-		res.WithGroupProfile(profile),
-	}
+	groupTraitOptions := []res.GroupTraitOption{}
 
 	resource, err := res.NewGroupResource(
 		team.Name,
 		resourceTypeTeam,
 		team.Id,
 		groupTraitOptions,
+		res.WithResourceProfile(profile),
 	)
 	if err != nil {
 		return nil, err
