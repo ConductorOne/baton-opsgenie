@@ -4,7 +4,7 @@ go 1.27.1
 
 require (
 	github.com/Sytten/logrus-zap-hook v0.1.0
-	github.com/conductorone/baton-sdk v0.32.1
+	github.com/conductorone/baton-sdk v0.32.2
 	github.com/ennyjfrick/ruleguard-logfatal v0.0.2
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
 	github.com/opsgenie/opsgenie-go-sdk-v2 v1.2.23
